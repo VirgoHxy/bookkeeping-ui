@@ -1,6 +1,5 @@
 import type { IconifyIcon } from "@iconify/vue";
-import type { TableColumns } from "@pureadmin/table";
-import { AxiosError, AxiosRequestConfig, AxiosResponse, Method } from "axios";
+import { Method } from "axios";
 import type { ECharts } from "echarts";
 import type { FunctionalComponent } from "vue";
 import { type RouteComponent, type RouteLocationNormalized } from "vue-router";
@@ -52,7 +51,6 @@ declare global {
 
   /**
    * 全局自定义环境变量的类型声明
-   * @see {@link https://yiming_chang.gitee.io/pure-admin-doc/pages/config/#%E5%85%B7%E4%BD%93%E9%85%8D%E7%BD%AE}
    */
   interface ViteEnv {
     VITE_PORT: number;
@@ -62,63 +60,6 @@ declare global {
     VITE_COMPRESSION: ViteCompression;
     VITE_BE_URL: string;
     VITE_MOCK: boolean;
-  }
-
-  /**
-   *  继承 `@pureadmin/table` 的 `TableColumns` ，方便全局直接调用
-   */
-  interface TableColumnList extends Array<TableColumns> {}
-
-  /**
-   * 对应 `public/serverConfig.json` 文件的类型声明
-   * @see {@link https://yiming_chang.gitee.io/pure-admin-doc/pages/config/#serverconfig-json}
-   */
-  interface ServerConfigs {
-    Version?: string;
-    Title?: string;
-    FixedHeader?: boolean;
-    HiddenSideBar?: boolean;
-    MultiTagsCache?: boolean;
-    KeepAlive?: boolean;
-    Locale?: string;
-    Layout?: string;
-    Theme?: string;
-    DarkMode?: boolean;
-    Grey?: boolean;
-    Weak?: boolean;
-    HideTabs?: boolean;
-    SidebarStatus?: boolean;
-    EpThemeColor?: string;
-    ShowLogo?: boolean;
-    ShowModel?: string;
-    MenuArrowIconNoTransition?: boolean;
-    CachingAsyncRoutes?: boolean;
-    TooltipEffect?: Effect;
-  }
-
-  /**
-   * 与 `ServerConfigs` 类型不同，这里是缓存到浏览器本地存储的类型声明
-   * @see {@link https://yiming_chang.gitee.io/pure-admin-doc/pages/config/#serverconfig-json}
-   */
-  interface StorageConfigs {
-    version?: string;
-    title?: string;
-    fixedHeader?: boolean;
-    hiddenSideBar?: boolean;
-    multiTagsCache?: boolean;
-    keepAlive?: boolean;
-    locale?: string;
-    layout?: string;
-    theme?: string;
-    darkMode?: boolean;
-    grey?: boolean;
-    weak?: boolean;
-    hideTabs?: boolean;
-    sidebarStatus?: boolean;
-    epThemeColor?: string;
-    showLogo?: boolean;
-    showModel?: string;
-    account?: string;
   }
 
   /**
@@ -279,36 +220,4 @@ declare global {
     Method,
     "get" | "post" | "put" | "delete" | "patch" | "option" | "head"
   >;
-
-  interface PureHttpError extends AxiosError {
-    isCancelRequest?: boolean;
-  }
-
-  interface PureHttpResponse extends AxiosResponse {
-    config: PureHttpRequestConfig;
-  }
-
-  interface PureHttpRequestConfig extends AxiosRequestConfig {
-    beforeRequestCallback?: (request: PureHttpRequestConfig) => void;
-    beforeResponseCallback?: (response: PureHttpResponse) => void;
-  }
-
-  interface PureHttp {
-    request<T>(
-      method: RequestMethods,
-      url: string,
-      param?: AxiosRequestConfig,
-      axiosConfig?: PureHttpRequestConfig
-    ): Promise<T>;
-    post<T, P>(
-      url: string,
-      params?: T,
-      config?: PureHttpRequestConfig
-    ): Promise<P>;
-    get<T, P>(
-      url: string,
-      params?: T,
-      config?: PureHttpRequestConfig
-    ): Promise<P>;
-  }
 }

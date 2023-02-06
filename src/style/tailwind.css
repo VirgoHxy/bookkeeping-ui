@@ -3,6 +3,14 @@
 @tailwind utilities;
 
 @layer components {
+  /*
+    4 = 1rem = 16px
+    1 = 0.25rem = 4px
+  */
+  .width {
+    @apply w-[calc(100%-2rem)];
+  }
+
   .flex-c {
     @apply flex justify-center items-center;
   }
@@ -15,7 +23,15 @@
     @apply flex justify-between items-center;
   }
 
-  .navbar-bg-hover {
-    @apply dark:text-white dark:hover:!bg-[#242424];
+  .absolute-center {
+    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+  }
+
+  .absolute-boittom {
+    @apply absolute bottom-4 left-1/2 transform -translate-x-1/2;
+  }
+
+  .box-ctnr {
+    @apply rounded-lg bg-white box-border width;
   }
 }
