@@ -78,6 +78,23 @@ export const payTypeColumns = [
 ];
 
 /**
+ * 结清状态类型
+ */
+export enum SettleType {
+  dailySettle = 0,
+  dailyOwe = 1,
+  settle = 2,
+  owe = 3
+}
+
+export enum SettleTypeText {
+  dailySettle = "当天结清",
+  dailyOwe = "当天欠账",
+  settle = "结清",
+  owe = "欠账"
+}
+
+/**
  * 顾客
  */
 export class Customer {
@@ -104,6 +121,6 @@ export class MoneyRecord {
   id: number;
   customId: number;
   money: number;
-  type: TradeType;
+  tradeType: TradeType;
   payType: PayType;
 }

@@ -4,13 +4,12 @@ import {
   MoneyRecord,
   PayType,
   payTypeColumns,
+  SettleType,
   TradeType,
   tradeTypeColumns
 } from "@/class-type";
 import { showToast, TagType } from "vant";
 import { computed, reactive, ref } from "vue";
-// type 改为 tradeType
-// tagComputed 的 type 改为 color
 const customerList: Customer[] = reactive([
   {
     id: 1,
@@ -48,14 +47,14 @@ const customerRecordList = reactive([
         id: 0,
         customId: 1,
         money: 200,
-        type: TradeType.in,
+        tradeType: TradeType.in,
         payType: PayType.cash
       },
       {
         id: 0,
         customId: 1,
         money: 200,
-        type: TradeType.out,
+        tradeType: TradeType.out,
         payType: PayType.wechat
       }
     ]
@@ -69,14 +68,14 @@ const customerRecordList = reactive([
         id: 0,
         customId: 2,
         money: 50,
-        type: TradeType.in,
+        tradeType: TradeType.in,
         payType: PayType.ali
       },
       {
         id: 1,
         customId: 2,
         money: 100,
-        type: TradeType.out,
+        tradeType: TradeType.out,
         payType: PayType.cash
       }
     ]
@@ -85,58 +84,69 @@ const customerRecordList = reactive([
 const customerRecordShow = ref(false);
 const customerRecordForm = reactive({
   money: null,
-  type: 0,
-  payType: 0,
+  tradeType: TradeType.out,
+  payType: PayType.cash,
   custom: {} as Customer
 });
 const customTagComputed = computed(() => (moneyRecordList: MoneyRecord[]) => {
   const money = getSumOfCustomerMoney(moneyRecordList);
   const absMoney = Math.abs(money);
-  const tagInfo: { type?: TagType; text?: string } = {};
+  const tagInfo: { tagType?: TagType; text?: string } = {};
   if (money > 0) {
-    tagInfo.type = "primary";
+    tagInfo.tagType = "primary";
     tagInfo.text = `补还 ${absMoney}`;
   } else if (money == 0) {
-    tagInfo.type = "success";
-    tagInfo.text = "结清";
+    tagInfo.tagType = "success";
+    tagInfo.text = "当天结清";
   } else {
-    tagInfo.type = "danger";
-    tagInfo.text = `待还 ${absMoney}`;
+    tagInfo.tagType = "danger";
+    tagInfo.text = `当天欠账 ${absMoney}`;
   }
   return tagInfo;
 });
 const moneyRecordShow = ref(false);
-const moneyRecordForm = reactive({ money: null, type: 0, payType: 0 });
+const moneyRecordForm = reactive({
+  money: null,
+  tradeType: TradeType.out,
+  payType: PayType.cash
+});
 const settleComputed = computed(() => (moneyRecordList: MoneyRecord[]) => {
   const money = getSumOfCustomerMoney(moneyRecordList);
-  // patch = 0, // 补账
-  // settle = 1, // 结清
-  // owe = 2, // 欠账
   if (money > 0) {
-    return 0;
+    // 暂时
+    return -1;
   } else if (money == 0) {
-    return 1;
+    return SettleType.dailySettle;
   } else {
-    return 2;
+    return SettleType.dailyOwe;
   }
 });
-const moneyTagComputed = computed(() => (moneyRecord: MoneyRecord) => {
-  const tagInfo: { type?: TagType; text?: string } = {};
-  const type = moneyRecord.type;
+const tradeTypeTagComputed = computed(() => (moneyRecord: MoneyRecord) => {
+  const tagInfo: { tagType?: TagType; text?: string } = {};
+  const tradeType = moneyRecord.tradeType;
+  const tradeTypeText =
+    tradeTypeColumns.filter(ele => ele.value == tradeType)[0]?.text || "未知";
+  tagInfo.text = tradeTypeText;
+  if (tradeType == TradeType.out) {
+    tagInfo.tagType = "danger";
+  } else if (tradeType == TradeType.in) {
+    tagInfo.tagType = "success";
+  }
+  return tagInfo;
+});
+
+const payTypeTagComputed = computed(() => (moneyRecord: MoneyRecord) => {
+  const tagInfo: { color?: string; text?: string } = {};
   const payType = moneyRecord.payType;
-  const typeText =
-    tradeTypeColumns.filter(ele => ele.value == type)[0]?.text || "未知";
   const payTypeText =
     payTypeColumns.filter(ele => ele.value == payType)[0]?.text || "未知";
+  tagInfo.text = payTypeText;
   if (payType == PayType.cash) {
-    tagInfo.type = "warning";
-    tagInfo.text = `${payTypeText} ${typeText}`;
+    tagInfo.color = "#f77a2a";
   } else if (payType == PayType.wechat) {
-    tagInfo.type = "success";
-    tagInfo.text = `${payTypeText} ${typeText}`;
+    tagInfo.color = "#11981a";
   } else if (payType == PayType.ali) {
-    tagInfo.type = "primary";
-    tagInfo.text = `${payTypeText} ${typeText}`;
+    tagInfo.color = "#1989fa";
   }
   return tagInfo;
 });
@@ -144,9 +154,9 @@ const moneyTagComputed = computed(() => (moneyRecord: MoneyRecord) => {
 function getSumOfCustomerMoney(moneyRecordList: MoneyRecord[]) {
   if (moneyRecordList instanceof Array) {
     return moneyRecordList.reduce((start, ele) => {
-      if (ele.type == TradeType.in) {
+      if (ele.tradeType == TradeType.in) {
         return start + ele.money;
-      } else if (ele.type == TradeType.out) {
+      } else if (ele.tradeType == TradeType.out) {
         return start - ele.money;
       }
     }, 0);
@@ -157,14 +167,14 @@ function getSumOfCustomerMoney(moneyRecordList: MoneyRecord[]) {
 function closeMoneyRecordOverlay() {
   moneyRecordShow.value = false;
   moneyRecordForm.money = null;
-  moneyRecordForm.type = 0;
+  moneyRecordForm.tradeType = TradeType.out;
 }
 function submitMoneyRecordForm() {
   const money = Math.abs(moneyRecordForm.money);
-  addMoneyRecord(money, moneyRecordForm.type, moneyRecordForm.payType);
+  addMoneyRecord(money, moneyRecordForm.tradeType, moneyRecordForm.payType);
   closeMoneyRecordOverlay();
 }
-function addMoneyRecord(money: number, type: TradeType, payType: PayType) {
+function addMoneyRecord(money: number, tradeType: TradeType, payType: PayType) {
   const customRecord = customerRecordList.find(
     ele => ele.customId == activeCustomerId.value
   );
@@ -173,7 +183,7 @@ function addMoneyRecord(money: number, type: TradeType, payType: PayType) {
     id: 998,
     customId: customRecord.customId,
     money,
-    type,
+    tradeType,
     payType
   });
 }
@@ -191,7 +201,7 @@ function clearMoneyRecord(name: string, moneyRecordList: MoneyRecord[]) {
 function closeCustomerRecordOverlay() {
   customerRecordShow.value = false;
   customerRecordForm.money = null;
-  customerRecordForm.type = 0;
+  customerRecordForm.tradeType = TradeType.out;
   customerRecordForm.custom = {} as Customer;
 }
 function addCustomerRecord() {
@@ -214,7 +224,7 @@ function addCustomerRecord() {
         id: 999,
         customId: customerRecordForm.custom.id,
         money: customerRecordForm.money,
-        type: customerRecordForm.type,
+        tradeType: customerRecordForm.tradeType,
         payType: customerRecordForm.payType
       }
     ]
@@ -238,6 +248,7 @@ function confirmPayTypePicker({ selectedOptions }) {
   const moneyRecordList = customRecord.moneyRecordList;
   const money = getSumOfCustomerMoney(moneyRecordList);
   const absMoney = Math.abs(money);
+  payTypePickerShow.value = false;
   addMoneyRecord(absMoney, TradeType.in, selectedOptions[0].value);
 }
 </script>
@@ -253,7 +264,9 @@ function confirmPayTypePicker({ selectedOptions }) {
         <div>
           {{ customRecord.name
           }}{{ customRecord.tel ? `（${customRecord.tel}）` : "" }}
-          <van-tag :type="customTagComputed(customRecord.moneyRecordList).type">
+          <van-tag
+            :type="customTagComputed(customRecord.moneyRecordList).tagType"
+          >
             {{ customTagComputed(customRecord.moneyRecordList).text }}
           </van-tag>
         </div>
@@ -265,8 +278,13 @@ function confirmPayTypePicker({ selectedOptions }) {
           :value="moneyRecord.money"
         >
           <template #title>
-            <van-tag :type="moneyTagComputed(moneyRecord).type">{{
-              moneyTagComputed(moneyRecord).text
+            <van-tag
+              class="mr-2"
+              :type="tradeTypeTagComputed(moneyRecord).tagType"
+              >{{ tradeTypeTagComputed(moneyRecord).text }}</van-tag
+            >
+            <van-tag :color="payTypeTagComputed(moneyRecord).color">{{
+              payTypeTagComputed(moneyRecord).text
             }}</van-tag>
           </template>
         </van-cell>
@@ -285,7 +303,9 @@ function confirmPayTypePicker({ selectedOptions }) {
           @click="
             clearMoneyRecord(customRecord.name, customRecord.moneyRecordList)
           "
-          :disabled="settleComputed(customRecord.moneyRecordList) == 1"
+          :disabled="
+            settleComputed(customRecord.moneyRecordList) !== SettleType.dailyOwe
+          "
         >
           结清
         </van-button>
@@ -311,7 +331,7 @@ function confirmPayTypePicker({ selectedOptions }) {
           <van-field name="type" label="交易类型">
             <template #input>
               <van-radio-group
-                v-model="moneyRecordForm.type"
+                v-model="moneyRecordForm.tradeType"
                 direction="horizontal"
               >
                 <van-radio
@@ -369,7 +389,7 @@ function confirmPayTypePicker({ selectedOptions }) {
           <van-field name="type" label="交易类型">
             <template #input>
               <van-radio-group
-                v-model="customerRecordForm.type"
+                v-model="customerRecordForm.tradeType"
                 direction="horizontal"
               >
                 <van-radio
